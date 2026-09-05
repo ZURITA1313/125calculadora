@@ -701,8 +701,11 @@ function actualizar() {
 
   // Cotas de Dimensión
   const s1 = cxT + posSensorsMeters[0] * scaleT;
+  const sUltimo = cxT + posSensorsMeters[numSensores - 1] * scaleT; // Posición del último sensor
   ctxT.font = '10px Segoe UI'; ctxT.textAlign = 'center';
+  ctxT.textAlign = 'center';
 
+// 1. Cota X efectivo (debajo del primer sensor)
   ctxT.strokeStyle = '#16a34a'; ctxT.lineWidth = 1;
   const yCotaEfectiva = cyPlantaT + (yEfectivo / 2) * scaleT + 12;
   ctxT.beginPath();
@@ -712,6 +715,7 @@ function actualizar() {
   ctxT.fillStyle = '#16a34a';
   ctxT.fillText(`X efectivo = ${xEfectivo.toFixed(2)}m`, s1, yCotaEfectiva + 11);
 
+  // 2. Cota X suelo (debajo)
   ctxT.strokeStyle = '#3b82f6';
   const yCotaSuelo = cyPlantaT + (ySuelo / 2) * scaleT + 28;
   ctxT.beginPath();
@@ -721,10 +725,14 @@ function actualizar() {
   ctxT.fillStyle = '#2563eb';
   ctxT.fillText(`X suelo = ${xSuelo.toFixed(2)}m`, s1, yCotaSuelo + 11);
 
-  ctxT.textAlign = 'left';
-  const xCotaY = s1 + (xSuelo / 2) * scaleT + 12;
+  // 3. Cotas Y (efectivo y suelo) DESPLAZADAS FUERA DE LA IMAGEN
+  // Tomamos el borde derecho del último sensor más un margen de desfasaje (15px)
+  const xCotaY = sUltimo + (xEfectivo / 2) * scaleT + 15; 
+
+  ctxT.textAlign = 'left'; // Alineación a la izquierda para que crezca hacia afuera
   ctxT.fillStyle = '#16a34a';
   ctxT.fillText(`Y efectivo = ${yEfectivo.toFixed(2)}m`, xCotaY, cyPlantaT - 4);
+  
   ctxT.fillStyle = '#2563eb';
   ctxT.fillText(`Y suelo = ${ySuelo.toFixed(2)}m`, xCotaY, cyPlantaT + 10);
 }
