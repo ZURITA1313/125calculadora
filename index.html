@@ -25,10 +25,10 @@
     .main-layout { display: flex; gap: 20px; align-items: flex-start; }
     
     .controls-sidebar {
-      width: 360px;
+      width: 310px; /* Antes 360px */
       flex-shrink: 0;
       background: #ffffff;
-      padding: 22px;
+      padding: 20px;
       border-radius: 12px;
       box-shadow: 0 4px 12px rgba(0,0,0,0.05);
     }
@@ -109,7 +109,7 @@
     .canvas-card {
       background: #ffffff;
       border-radius: 12px;
-      padding: 18px;
+      padding: 10px;
       box-shadow: 0 4px 12px rgba(0,0,0,0.05);
       display: flex;
       flex-direction: column;
@@ -145,8 +145,8 @@
       border: 1px solid #f1f5f9;
       border-radius: 8px;
       width: 100%;
-      max-width: 100%;
       height: auto;
+      max-height: 420px;
     }
 
     .slider-wrapper { width: 100%; margin-top: 8px; }
@@ -188,7 +188,7 @@
     <div class="form-group">
       <label for="W">Ancho Pasillo / Entrada (W):</label>
       <div class="input-wrapper">
-        <input type="number" id="W" value="6.00" step="0.1" min="1" max="30" oninput="actualizar()">
+        <input type="number" id="W" value="4.00" step="0.1" min="1" max="30" oninput="actualizar()">
         <span class="unit">m</span>
       </div>
     </div>
@@ -196,7 +196,7 @@
     <div class="form-group">
       <label for="H">Altura Montaje Sensor (H):</label>
       <div class="input-wrapper">
-        <input type="number" id="H" value="4.30" step="0.05" min="2" max="10" oninput="actualizar()">
+        <input type="number" id="H" value="3.30" step="0.05" min="2" max="10" oninput="actualizar()">
         <span class="unit">m</span>
       </div>
     </div>
@@ -294,7 +294,7 @@
         <div class="canvas-title">VISTA FRONTAL (Corte de Elevación X - Z)</div>
         <span style="font-size: 0.75rem; color: #64748b;">Escala adaptativa de Altura (H) y Ancho (W)</span>
       </div>
-      <canvas id="cvsFront" width="850" height="320"></canvas>
+      <canvas id="cvsFront" width="1100" height="420"></canvas>
     </div>
 
     <!-- Vista Superior -->
@@ -303,7 +303,7 @@
         <div class="canvas-title">VISTA SUPERIOR (Planta Cobertura X - Y)</div>
         <span style="font-size: 0.75rem; color: #64748b;">Verde = Efectivo (h) | Azul = Suelo | Rojo = Traslape / Zona Ciega</span>
       </div>
-      <canvas id="cvsTop" width="850" height="320"></canvas>
+      <canvas id="cvsTop" width="1100" height="420"></canvas>
     </div>
 
   </div>
@@ -458,8 +458,8 @@ function actualizar() {
   const ctxF = cvsF.getContext('2d');
   ctxF.clearRect(0, 0, cvsF.width, cvsF.height);
 
-  const paddingXF = 50;
-  const paddingYF = 40;
+  const paddingXF = 35;
+  const paddingYF = 30;
   const scaleFX = (cvsF.width - 2 * paddingXF) / anchoEscenaMeters;
   
   // Escala vertical proporcional
@@ -547,19 +547,19 @@ function actualizar() {
   // Cotas Superiores Frontal
   const yCotaTecho = cyTechoF - 15;
   ctxF.strokeStyle = '#0284c7'; ctxF.lineWidth = 1.2;
-  ctxF.fillStyle = '#0284c7'; ctxF.font = 'bold 10px Segoe UI'; ctxF.textAlign = 'center';
+  ctxF.fillStyle = '#0284c7'; ctxF.font = 'bold 13px Segoe UI'; ctxF.textAlign = 'center';
 
   const xPrimerSensorF = cxF + posSensorsMeters[0] * scaleFX;
   ctxF.beginPath(); ctxF.moveTo(xIzqW, yCotaTecho); ctxF.lineTo(xPrimerSensorF, yCotaTecho); ctxF.stroke();
   ctxF.beginPath(); ctxF.moveTo(xIzqW, yCotaTecho - 4); ctxF.lineTo(xIzqW, yCotaTecho + 4); ctxF.stroke();
   ctxF.beginPath(); ctxF.moveTo(xPrimerSensorF, yCotaTecho - 4); ctxF.lineTo(xPrimerSensorF, yCotaTecho + 4); ctxF.stroke();
-  ctxF.fillText(`D.Pared = ${distPared.toFixed(2)}m`, (xIzqW + xPrimerSensorF) / 2, yCotaTecho - 5);
+  ctxF.fillText(`D = ${distPared.toFixed(2)}m`, (xIzqW + xPrimerSensorF) / 2, yCotaTecho - 5);
 
   const xUltimoSensorF = cxF + posSensorsMeters[posSensorsMeters.length - 1] * scaleFX;
   ctxF.beginPath(); ctxF.moveTo(xUltimoSensorF, yCotaTecho); ctxF.lineTo(xDerW, yCotaTecho); ctxF.stroke();
   ctxF.beginPath(); ctxF.moveTo(xUltimoSensorF, yCotaTecho - 4); ctxF.lineTo(xUltimoSensorF, yCotaTecho + 4); ctxF.stroke();
   ctxF.beginPath(); ctxF.moveTo(xDerW, yCotaTecho - 4); ctxF.lineTo(xDerW, yCotaTecho + 4); ctxF.stroke();
-  ctxF.fillText(`D.Pared = ${distPared.toFixed(2)}m`, (xUltimoSensorF + xDerW) / 2, yCotaTecho - 5);
+  ctxF.fillText(`D = ${distPared.toFixed(2)}m`, (xUltimoSensorF + xDerW) / 2, yCotaTecho - 5);
 
   if (numSensores > 1) {
     for (let i = 0; i < numSensores - 1; i++) {
@@ -584,7 +584,7 @@ function actualizar() {
   ctxF.beginPath(); ctxF.moveTo(xP_F, cyCabezaF + 12); ctxF.lineTo(xP_F, cySueloF - 2); ctxF.stroke();
 
   // Cotas Lateral Altura
-  ctxF.fillStyle = '#475569'; ctxF.font = '10px Segoe UI'; ctxF.textAlign = 'right';
+  ctxF.fillStyle = '#475569'; ctxF.font = '13px Segoe UI'; ctxF.textAlign = 'right';
   ctxF.fillText(`H = ${H.toFixed(2)}m`, xIzqW - 12, cyTechoF + 4);
   ctxF.fillText(`h = ${h.toFixed(2)}m`, xIzqW - 12, cyCabezaF + 4);
 
@@ -630,7 +630,7 @@ function actualizar() {
 
     // Punto Sensor
     ctxT.fillStyle = '#0f172a'; ctxT.beginPath(); ctxT.arc(xS, cyPlantaT, 4, 0, Math.PI * 2); ctxT.fill();
-    ctxT.font = 'bold 10px Segoe UI'; ctxT.fillStyle = '#1e293b'; ctxT.textAlign = 'center';
+    ctxT.font = 'bold 12px Segoe UI'; ctxT.fillStyle = '#1e293b'; ctxT.textAlign = 'center';
     ctxT.fillText(`S${idx + 1}`, xS, cyPlantaT - 7);
   });
 
@@ -643,7 +643,7 @@ function actualizar() {
         ctxT.strokeStyle = '#dc2626'; ctxT.lineWidth = 1.5;
         ctxT.strokeRect(xTC - (traslape * scaleT) / 2, cyPlantaT - (yEfectivo / 2) * scaleT, traslape * scaleT, yEfectivo * scaleT);
 
-        ctxT.fillStyle = '#b91c1c'; ctxT.font = 'bold 10px Segoe UI'; ctxT.textAlign = 'center';
+        ctxT.fillStyle = '#b91c1c'; ctxT.font = 'bold 12px Segoe UI'; ctxT.textAlign = 'center';
         ctxT.fillText(`T = ${traslape.toFixed(2)}m (${pctTraslape.toFixed(1)}%)`, xTC, cyPlantaT - (yEfectivo / 2) * scaleT - 5);
       }
     } else if (traslape < 0) {
@@ -657,7 +657,7 @@ function actualizar() {
         ctxT.strokeRect(xHueco, cyPlantaT - (yEfectivo / 2) * scaleT, wHueco, yEfectivo * scaleT);
         ctxT.setLineDash([]);
 
-        ctxT.fillStyle = '#b91c1c'; ctxT.font = 'bold 10px Segoe UI'; ctxT.textAlign = 'center';
+        ctxT.fillStyle = '#b91c1c'; ctxT.font = 'bold 12px Segoe UI'; ctxT.textAlign = 'center';
         ctxT.fillText('ZONA CIEGA', xHueco + wHueco / 2, cyPlantaT + 3);
       }
     }
@@ -666,19 +666,19 @@ function actualizar() {
   // Cotas Vista Superior
   const yCotaPlantaSuperior = cyPlantaT - (ySuelo / 2) * scaleT - 18;
   ctxT.strokeStyle = '#0284c7'; ctxT.lineWidth = 1.2;
-  ctxT.fillStyle = '#0284c7'; ctxT.font = 'bold 10px Segoe UI'; ctxT.textAlign = 'center';
+  ctxT.fillStyle = '#0284c7'; ctxT.font = 'bold 12px Segoe UI'; ctxT.textAlign = 'center';
 
   const xPrimerSensorT = cxT + posSensorsMeters[0] * scaleT;
   ctxT.beginPath(); ctxT.moveTo(xIzqWT, yCotaPlantaSuperior); ctxT.lineTo(xPrimerSensorT, yCotaPlantaSuperior); ctxT.stroke();
   ctxT.beginPath(); ctxT.moveTo(xIzqWT, yCotaPlantaSuperior - 4); ctxT.lineTo(xIzqWT, yCotaPlantaSuperior + 4); ctxT.stroke();
   ctxT.beginPath(); ctxT.moveTo(xPrimerSensorT, yCotaPlantaSuperior - 4); ctxT.lineTo(xPrimerSensorT, yCotaPlantaSuperior + 4); ctxT.stroke();
-  ctxT.fillText(`D.Pared = ${distPared.toFixed(2)}m`, (xIzqWT + xPrimerSensorT) / 2, yCotaPlantaSuperior - 5);
+  ctxT.fillText(`D = ${distPared.toFixed(2)}m`, (xIzqWT + xPrimerSensorT) / 2, yCotaPlantaSuperior - 5);
 
   const xUltimoSensorT = cxT + posSensorsMeters[posSensorsMeters.length - 1] * scaleT;
   ctxT.beginPath(); ctxT.moveTo(xUltimoSensorT, yCotaPlantaSuperior); ctxT.lineTo(xDerWT, yCotaPlantaSuperior); ctxT.stroke();
   ctxT.beginPath(); ctxT.moveTo(xUltimoSensorT, yCotaPlantaSuperior - 4); ctxT.lineTo(xUltimoSensorT, yCotaPlantaSuperior + 4); ctxT.stroke();
   ctxT.beginPath(); ctxT.moveTo(xDerWT, yCotaPlantaSuperior - 4); ctxT.lineTo(xDerWT, yCotaPlantaSuperior + 4); ctxT.stroke();
-  ctxT.fillText(`D.Pared = ${distPared.toFixed(2)}m`, (xUltimoSensorT + xDerWT) / 2, yCotaPlantaSuperior - 5);
+  ctxT.fillText(`D = ${distPared.toFixed(2)}m`, (xUltimoSensorT + xDerWT) / 2, yCotaPlantaSuperior - 5);
 
   if (numSensores > 1) {
     for (let i = 0; i < numSensores - 1; i++) {
@@ -702,7 +702,7 @@ function actualizar() {
   // Cotas de Dimensión
   const s1 = cxT + posSensorsMeters[0] * scaleT;
   const sUltimo = cxT + posSensorsMeters[numSensores - 1] * scaleT; // Posición del último sensor
-  ctxT.font = '10px Segoe UI'; ctxT.textAlign = 'center';
+  ctxT.font = '12x Segoe UI'; ctxT.textAlign = 'center';
   ctxT.textAlign = 'center';
 
 // 1. Cota X efectivo (debajo del primer sensor)
@@ -727,14 +727,14 @@ function actualizar() {
 
   // 3. Cotas Y (efectivo y suelo) DESPLAZADAS FUERA DE LA IMAGEN
   // Tomamos el borde derecho del último sensor más un margen de desfasaje (15px)
-  const xCotaY = sUltimo + (xEfectivo / 2) * scaleT + 15; 
+  const xCotaY = sUltimo + (xEfectivo / 2) * scaleT + 18; 
 
   ctxT.textAlign = 'left'; // Alineación a la izquierda para que crezca hacia afuera
   ctxT.fillStyle = '#16a34a';
-  ctxT.fillText(`Y efectivo = ${yEfectivo.toFixed(2)}m`, xCotaY, cyPlantaT - 4);
+  ctxT.fillText(`Y efectivo = ${yEfectivo.toFixed(2)}m`, xCotaY, cyPlantaT - 6);
   
   ctxT.fillStyle = '#2563eb';
-  ctxT.fillText(`Y suelo = ${ySuelo.toFixed(2)}m`, xCotaY, cyPlantaT + 10);
+  ctxT.fillText(`Y suelo = ${ySuelo.toFixed(2)}m`, xCotaY, cyPlantaT + 12);
 }
 
 actualizar();
