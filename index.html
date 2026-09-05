@@ -76,7 +76,6 @@
     .checkbox-container input { width: 16px; height: 16px; cursor: pointer; }
     .checkbox-container label { margin: 0; font-size: 0.83rem; cursor: pointer; color: #2d3748; }
 
-    /* Results Card */
     .results-card {
       background: #f8fafc;
       border: 1px solid #e2e8f0;
@@ -99,7 +98,6 @@
     .highlight-red { color: #dc2626; }
     .highlight-blue { color: #2563eb; }
 
-    /* Visualizer Area */
     .visualizer-container {
       flex-grow: 1;
       display: flex;
@@ -198,7 +196,7 @@
     <div class="form-group">
       <label for="H">Altura Montaje Sensor (H):</label>
       <div class="input-wrapper">
-        <input type="number" id="H" value="3.14" step="0.05" min="2" max="10" oninput="actualizar()">
+        <input type="number" id="H" value="4.30" step="0.05" min="2" max="10" oninput="actualizar()">
         <span class="unit">m</span>
       </div>
     </div>
@@ -294,9 +292,9 @@
     <div class="canvas-card">
       <div class="canvas-header">
         <div class="canvas-title">VISTA FRONTAL (Corte de Elevación X - Z)</div>
-        <span style="font-size: 0.75rem; color: #64748b;">Escala adaptativa</span>
+        <span style="font-size: 0.75rem; color: #64748b;">Escala adaptativa de Altura (H) y Ancho (W)</span>
       </div>
-      <canvas id="cvsFront" width="850" height="260"></canvas>
+      <canvas id="cvsFront" width="850" height="320"></canvas>
     </div>
 
     <!-- Vista Superior -->
@@ -335,7 +333,6 @@ function actualizar() {
   const yEfectivo = 2 * deltaH * Math.tan(betaRad / 2);
 
   // AUTO-CÁLCULO DE SENSORES CON TRASLAPE RECOMENDADO (mínimo 15%)
-  // S_max_rec = X_efectivo * (1 - 0.15)
   const factorTraslapeRec = 0.15;
   const sMaxRec = xEfectivo * (1 - factorTraslapeRec);
 
@@ -363,7 +360,7 @@ function actualizar() {
   // Traslape absoluto a la altura h
   const traslape = (numSensores > 1) ? (xEfectivo - S) : 0;
 
-  // Cálculo del porcentaje de traslape con respecto a X_efectivo
+  // Porcentaje de traslape
   const pctTraslape = (numSensores > 1 && xEfectivo > 0) ? (traslape / xEfectivo) * 100 : 0;
 
   // Slider Ajuste
@@ -445,9 +442,8 @@ function actualizar() {
     elEstado.className = "result-val highlight-blue";
   }
 
-
   // ==========================================
-  // RENDERIZADO GRÁFICO (Canvas dinámico con Margen)
+  // RENDERIZADO GRÁFICO VISTA FRONTAL (CORREGIDO)
   // ==========================================
 
   const startXSensor = (numSensores === 1) ? 0 : -((numSensores - 1) * S) / 2;
@@ -458,96 +454,108 @@ function actualizar() {
   const xMaxTotal = Math.max(W / 2, posSensorsMeters[posSensorsMeters.length - 1] + xSuelo / 2);
   const anchoEscenaMeters = (xMaxTotal - xMinTotal) * 1.15;
 
-  // 1. DIBUJO VISTA FRONTAL (X-Z)
   const cvsF = document.getElementById('cvsFront');
   const ctxF = cvsF.getContext('2d');
   ctxF.clearRect(0, 0, cvsF.width, cvsF.height);
 
   const paddingXF = 50;
-  const scaleF = (cvsF.width - 2 * paddingXF) / anchoEscenaMeters;
+  const paddingYF = 40;
+  const scaleFX = (cvsF.width - 2 * paddingXF) / anchoEscenaMeters;
+  
+  // Escala vertical proporcional
+  const alturaDisponiblePixels = cvsF.height - (paddingYF + 35);
+  const scaleFZ = alturaDisponiblePixels / Math.max(H, 2.0);
+
   const cxF = cvsF.width / 2;
+  const cySueloF = cvsF.height - 30; 
+  const cyTechoF = cySueloF - (H * scaleFZ); 
+  const cyCabezaF = cySueloF - (h * scaleFZ); 
 
-  const cySueloF = 210;
-  const cyTechoF = cySueloF - (H * scaleF);
-  const cyCabezaF = cySueloF - (h * scaleF);
-
-  const xIzqW = cxF - (W / 2) * scaleF;
-  const xDerW = cxF + (W / 2) * scaleF;
+  const xIzqW = cxF - (W / 2) * scaleFX;
+  const xDerW = cxF + (W / 2) * scaleFX;
 
   // Suelo
   ctxF.strokeStyle = '#334155'; ctxF.lineWidth = 2.5;
   ctxF.beginPath(); ctxF.moveTo(xIzqW - 30, cySueloF); ctxF.lineTo(xDerW + 30, cySueloF); ctxF.stroke();
 
-  // Muros Laterales W
+  // Muros Laterales
   ctxF.fillStyle = '#cbd5e1';
-  ctxF.fillRect(xIzqW - 10, cyTechoF - 10, 10, cySueloF - cyTechoF + 10);
-  ctxF.fillRect(xDerW, cyTechoF - 10, 10, cySueloF - cyTechoF + 10);
+  ctxF.fillRect(xIzqW - 10, cyTechoF - 5, 10, cySueloF - cyTechoF + 5);
+  ctxF.fillRect(xDerW, cyTechoF - 5, 10, cySueloF - cyTechoF + 5);
 
-  // Línea de Cota Cabeza (h) y Techo (H)
+  // Líneas Discontinuas (Líneas de Cota H y h)
   ctxF.strokeStyle = '#94a3b8'; ctxF.setLineDash([4, 4]); ctxF.lineWidth = 1;
   ctxF.beginPath(); ctxF.moveTo(xIzqW - 25, cyCabezaF); ctxF.lineTo(xDerW + 25, cyCabezaF); ctxF.stroke();
   ctxF.beginPath(); ctxF.moveTo(xIzqW - 25, cyTechoF); ctxF.lineTo(xDerW + 25, cyTechoF); ctxF.stroke();
   ctxF.setLineDash([]);
 
-  // Dibujar Haz de Sensores Frontal
-  posSensorsMeters.forEach((xM) => {
-    const xS = cxF + xM * scaleF;
+  const altoCajaPixel = h * scaleFZ;
 
-    // Cono Haz Suelo (Azul)
+  // Haz y Cajas de Cobertura Frontal
+  posSensorsMeters.forEach((xM) => {
+    const xS = cxF + xM * scaleFX;
+
+    // Cono de haz al Suelo (Azul)
     ctxF.beginPath(); ctxF.moveTo(xS, cyTechoF);
-    ctxF.lineTo(xS - (xSuelo / 2) * scaleF, cySueloF);
-    ctxF.lineTo(xS + (xSuelo / 2) * scaleF, cySueloF);
+    ctxF.lineTo(xS - (xSuelo / 2) * scaleFX, cySueloF);
+    ctxF.lineTo(xS + (xSuelo / 2) * scaleFX, cySueloF);
     ctxF.closePath();
     ctxF.fillStyle = 'rgba(59, 130, 246, 0.08)'; ctxF.fill();
-    ctxF.strokeStyle = 'rgba(59, 130, 246, 0.5)'; ctxF.lineWidth = 1; ctxF.stroke();
+    ctxF.strokeStyle = 'rgba(59, 130, 246, 0.4)'; ctxF.lineWidth = 1; ctxF.stroke();
 
-    // Caja Cobertura Efectiva (Verde)
-    ctxF.fillStyle = 'rgba(34, 197, 94, 0.12)';
-    ctxF.fillRect(xS - (xEfectivo / 2) * scaleF, cyCabezaF, xEfectivo * scaleF, h * scaleF);
+    // Caja Verde Cobertura Efectiva X_efectivo (Inicia en h hacia abajo)
+    const xEfectivoPx = xEfectivo * scaleFX;
+    const xInicioCaja = xS - (xEfectivoPx / 2);
+
+    ctxF.fillStyle = 'rgba(34, 197, 94, 0.15)';
+    ctxF.fillRect(xInicioCaja, cyCabezaF, xEfectivoPx, altoCajaPixel);
     ctxF.strokeStyle = '#16a34a'; ctxF.lineWidth = 1.5;
-    ctxF.strokeRect(xS - (xEfectivo / 2) * scaleF, cyCabezaF, xEfectivo * scaleF, h * scaleF);
+    ctxF.strokeRect(xInicioCaja, cyCabezaF, xEfectivoPx, altoCajaPixel);
 
-    // Icono Sensor
-    ctxF.fillStyle = '#1e293b'; ctxF.fillRect(xS - 12, cyTechoF - 7, 24, 8);
+    // Sensor Techo
+    ctxF.fillStyle = '#1e293b'; ctxF.fillRect(xS - 12, cyTechoF - 6, 24, 6);
     ctxF.fillStyle = '#3b82f6'; ctxF.beginPath(); ctxF.arc(xS, cyTechoF, 3, 0, Math.PI * 2); ctxF.fill();
   });
 
-  // Dibujar Zona Ciega o Traslape Frontal
+  // Traslape o Zona Ciega en Vista Frontal (Alineado exactamente con cyCabezaF)
   if (numSensores > 1) {
     if (traslape < 0) {
       for (let i = 0; i < numSensores - 1; i++) {
-        const xS1 = cxF + posSensorsMeters[i] * scaleF;
-        const xHueco = xS1 + (xEfectivo / 2) * scaleF;
-        const wHueco = Math.abs(traslape) * scaleF;
-        ctxF.fillStyle = 'rgba(239, 68, 68, 0.2)';
-        ctxF.fillRect(xHueco, cyCabezaF, wHueco, h * scaleF);
+        const xS1 = cxF + posSensorsMeters[i] * scaleFX;
+        const xHueco = xS1 + (xEfectivo / 2) * scaleFX;
+        const wHueco = Math.abs(traslape) * scaleFX;
+
+        ctxF.fillStyle = 'rgba(239, 68, 68, 0.25)';
+        ctxF.fillRect(xHueco, cyCabezaF, wHueco, altoCajaPixel);
         ctxF.strokeStyle = '#dc2626'; ctxF.setLineDash([3, 3]);
-        ctxF.strokeRect(xHueco, cyCabezaF, wHueco, h * scaleF);
+        ctxF.strokeRect(xHueco, cyCabezaF, wHueco, altoCajaPixel);
         ctxF.setLineDash([]);
       }
     } else if (traslape > 0) {
       for (let i = 0; i < numSensores - 1; i++) {
-        const xTC = cxF + ((posSensorsMeters[i] + posSensorsMeters[i + 1]) / 2) * scaleF;
+        const xTC = cxF + ((posSensorsMeters[i] + posSensorsMeters[i + 1]) / 2) * scaleFX;
+        const wTraslapePx = traslape * scaleFX;
+
         ctxF.fillStyle = 'rgba(239, 68, 68, 0.25)';
-        ctxF.fillRect(xTC - (traslape * scaleF) / 2, cyCabezaF, traslape * scaleF, h * scaleF);
+        ctxF.fillRect(xTC - (wTraslapePx / 2), cyCabezaF, wTraslapePx, altoCajaPixel);
         ctxF.strokeStyle = '#dc2626'; ctxF.lineWidth = 1.5;
-        ctxF.strokeRect(xTC - (traslape * scaleF) / 2, cyCabezaF, traslape * scaleF, h * scaleF);
+        ctxF.strokeRect(xTC - (wTraslapePx / 2), cyCabezaF, wTraslapePx, altoCajaPixel);
       }
     }
   }
 
-  // Cotas Superiores Vista Frontal
-  const yCotaTecho = cyTechoF - 18;
+  // Cotas Superiores Frontal
+  const yCotaTecho = cyTechoF - 15;
   ctxF.strokeStyle = '#0284c7'; ctxF.lineWidth = 1.2;
   ctxF.fillStyle = '#0284c7'; ctxF.font = 'bold 10px Segoe UI'; ctxF.textAlign = 'center';
 
-  const xPrimerSensorF = cxF + posSensorsMeters[0] * scaleF;
+  const xPrimerSensorF = cxF + posSensorsMeters[0] * scaleFX;
   ctxF.beginPath(); ctxF.moveTo(xIzqW, yCotaTecho); ctxF.lineTo(xPrimerSensorF, yCotaTecho); ctxF.stroke();
   ctxF.beginPath(); ctxF.moveTo(xIzqW, yCotaTecho - 4); ctxF.lineTo(xIzqW, yCotaTecho + 4); ctxF.stroke();
   ctxF.beginPath(); ctxF.moveTo(xPrimerSensorF, yCotaTecho - 4); ctxF.lineTo(xPrimerSensorF, yCotaTecho + 4); ctxF.stroke();
   ctxF.fillText(`D.Pared = ${distPared.toFixed(2)}m`, (xIzqW + xPrimerSensorF) / 2, yCotaTecho - 5);
 
-  const xUltimoSensorF = cxF + posSensorsMeters[posSensorsMeters.length - 1] * scaleF;
+  const xUltimoSensorF = cxF + posSensorsMeters[posSensorsMeters.length - 1] * scaleFX;
   ctxF.beginPath(); ctxF.moveTo(xUltimoSensorF, yCotaTecho); ctxF.lineTo(xDerW, yCotaTecho); ctxF.stroke();
   ctxF.beginPath(); ctxF.moveTo(xUltimoSensorF, yCotaTecho - 4); ctxF.lineTo(xUltimoSensorF, yCotaTecho + 4); ctxF.stroke();
   ctxF.beginPath(); ctxF.moveTo(xDerW, yCotaTecho - 4); ctxF.lineTo(xDerW, yCotaTecho + 4); ctxF.stroke();
@@ -555,8 +563,8 @@ function actualizar() {
 
   if (numSensores > 1) {
     for (let i = 0; i < numSensores - 1; i++) {
-      const xS1_F = cxF + posSensorsMeters[i] * scaleF;
-      const xS2_F = cxF + posSensorsMeters[i + 1] * scaleF;
+      const xS1_F = cxF + posSensorsMeters[i] * scaleFX;
+      const xS2_F = cxF + posSensorsMeters[i + 1] * scaleFX;
       ctxF.strokeStyle = '#2563eb';
       ctxF.beginPath(); ctxF.moveTo(xS1_F, yCotaTecho); ctxF.lineTo(xS2_F, yCotaTecho); ctxF.stroke();
       ctxF.beginPath(); ctxF.moveTo(xS1_F, yCotaTecho - 4); ctxF.lineTo(xS1_F, yCotaTecho + 4); ctxF.stroke();
@@ -567,19 +575,23 @@ function actualizar() {
   }
 
   // Persona Vista Frontal
-  const xP_F = cxF + posP * scaleF;
+  const xP_F = cxF + posP * scaleFX;
   const colorP = detectadoPor === 0 ? '#dc2626' : (detectadoPor >= 2 ? '#16a34a' : '#2563eb');
   
   ctxF.fillStyle = colorP;
-  ctxF.beginPath(); ctxF.arc(xP_F, cyCabezaF + 7, 6, 0, Math.PI * 2); ctxF.fill();
+  ctxF.beginPath(); ctxF.arc(xP_F, cyCabezaF + 6, 6, 0, Math.PI * 2); ctxF.fill();
   ctxF.strokeStyle = colorP; ctxF.lineWidth = 2.5;
-  ctxF.beginPath(); ctxF.moveTo(xP_F, cyCabezaF + 13); ctxF.lineTo(xP_F, cySueloF - 5); ctxF.stroke();
+  ctxF.beginPath(); ctxF.moveTo(xP_F, cyCabezaF + 12); ctxF.lineTo(xP_F, cySueloF - 2); ctxF.stroke();
 
+  // Cotas Lateral Altura
   ctxF.fillStyle = '#475569'; ctxF.font = '10px Segoe UI'; ctxF.textAlign = 'right';
-  ctxF.fillText(`H = ${H.toFixed(2)}m`, xIzqW - 15, cyTechoF + 10);
-  ctxF.fillText(`h = ${h.toFixed(2)}m`, xIzqW - 15, cyCabezaF + 10);
+  ctxF.fillText(`H = ${H.toFixed(2)}m`, xIzqW - 12, cyTechoF + 4);
+  ctxF.fillText(`h = ${h.toFixed(2)}m`, xIzqW - 12, cyCabezaF + 4);
 
-  // 2. DIBUJO VISTA SUPERIOR (X-Y)
+  // ==========================================
+  // RENDERIZADO VISTA SUPERIOR (PLANTA X-Y)
+  // ==========================================
+
   const cvsT = document.getElementById('cvsTop');
   const ctxT = cvsT.getContext('2d');
   ctxT.clearRect(0, 0, cvsT.width, cvsT.height);
